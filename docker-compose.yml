@@ -22,8 +22,8 @@ services:
     environment:
       - DEBUG=False
       - SECRET_KEY=your-super-secret-key-change-this-in-production
-      - ALLOWED_HOSTS=localhost,127.0.0.1,your-domain.com
-      - CSRF_TRUSTED_ORIGINS=http://localhost,https://your-domain.com
+      - ALLOWED_HOSTS=localhost,127.0.0.1,89.116.27.54
+      - CSRF_TRUSTED_ORIGINS=http://localhost,http://89.116.27.54:8080
       - DB_ENGINE=django.db.backends.postgresql
       - DB_NAME=ilmiy_reyting
       - DB_USER=postgres
