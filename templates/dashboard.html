@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+
+{% block title %}Bosh sahifa - Ilmiy Reyting{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h1>Bosh sahifa</h1>
+    <div class="top-bar-actions">
+        <span>Salom, <strong>{{ user.get_full_name|default:user.username }}</strong></span>
+        <span class="badge badge-info">{{ user.get_role_display }}</span>
+    </div>
+</div>
+
+<!-- Muddati o'tgan ogohlantirishlar -->
+{% if overdue_deadlines %}
+<div class="alert alert-error">
+    <strong>Diqqat!</strong> {{ overdue_deadlines|length }} ta muddati o'tgan topshiriq bor!
+    {% for d in overdue_deadlines %}
+    <br>- {{ d.title }} ({{ d.due_date|date:"d.m.Y" }})
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Yaqinlashayotgan muddatlar -->
+{% for d in deadlines %}
+{% if d.days_left >= 0 and d.days_left <= 7 %}
+<div class="alert alert-info">
+    &#9200; <strong>{{ d.title }}</strong> - {{ d.due_date|date:"d.m.Y" }} gacha {{ d.days_left }} kun qoldi!
+</div>
+{% endif %}
+{% endfor %}
+
+<div class="stats-grid">
+    {% if teacher %}
+    <div class="stat-card">
+        <div class="stat-icon icon-primary">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+        </div>
+        <h3>Umumiy ball</h3>
+        <div class="number">{{ total_score }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon icon-success">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        </div>
+        <h3>Jami ishlarim</h3>
+        <div class="number">{{ works_count }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon icon-warning">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <h3>Kutilmoqda</h3>
+        <div class="number">{{ pending_count }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon icon-info">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <h3>Tasdiqlangan</h3>
+        <div class="number">{{ approved_count }}</div>
+    </div>
+    {% endif %}
+
+    {% if user.is_katta %}
+    <div class="stat-card">
+        <div class="stat-icon icon-primary">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        </div>
+        <h3>Jami o'qituvchilar</h3>
+        <div class="number">{{ all_teachers_count }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon icon-success">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        </div>
+        <h3>Jami ilmiy ishlar</h3>
+        <div class="number">{{ all_works_count }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon icon-danger">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <h3>Tasdiq kutayotgan</h3>
+        <div class="number">{{ pending_works }}</div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- TOP 3 o'qituvchilar -->
+{% if top3 %}
+<div class="card">
+    <div class="card-header">
+        <h2>TOP 3 - Eng yaxshi o'qituvchilar</h2>
+        <a href="{% url 'rating' %}" class="btn btn-outline btn-sm">To'liq reyting</a>
+    </div>
+    <div class="card-body">
+        <div class="podium-container">
+            <!-- 2-o'rin -->
+            {% if top3|length >= 2 %}
+            <div class="podium-col podium-second">
+                <div class="podium-info">
+                    <div class="podium-rank">2</div>
+                    <div class="podium-avatar">
+                        <span>{{ top3.1.user.first_name|first }}{{ top3.1.user.last_name|first }}</span>
+                    </div>
+                    <div class="podium-name">{{ top3.1.user.get_full_name|default:top3.1.user.username }}</div>
+                    <div class="podium-score">{{ top3.1.score }} ball</div>
+                </div>
+                <div class="podium-base base-second">
+                    <span class="base-num">2</span>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- 1-o'rin -->
+            {% if top3|length >= 1 %}
+            <div class="podium-col podium-first">
+                <div class="podium-info">
+                    <div class="podium-rank">1</div>
+                    <div class="podium-avatar podium-avatar-first">
+                        <span>{{ top3.0.user.first_name|first }}{{ top3.0.user.last_name|first }}</span>
+                    </div>
+                    <div class="podium-name">{{ top3.0.user.get_full_name|default:top3.0.user.username }}</div>
+                    <div class="podium-score">{{ top3.0.score }} ball</div>
+                </div>
+                <div class="podium-base base-first">
+                    <span class="base-num">1</span>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- 3-o'rin -->
+            {% if top3|length >= 3 %}
+            <div class="podium-col podium-third">
+                <div class="podium-info">
+                    <div class="podium-rank">3</div>
+                    <div class="podium-avatar">
+                        <span>{{ top3.2.user.first_name|first }}{{ top3.2.user.last_name|first }}</span>
+                    </div>
+                    <div class="podium-name">{{ top3.2.user.get_full_name|default:top3.2.user.username }}</div>
+                    <div class="podium-score">{{ top3.2.score }} ball</div>
+                </div>
+                <div class="podium-base base-third">
+                    <span class="base-num">3</span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if recent_works %}
+<div class="card">
+    <div class="card-header">
+        <h2>So'nggi ishlarim</h2>
+        <a href="{% url 'my_works' %}" class="btn btn-outline btn-sm">Barchasini ko'rish</a>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nomi</th>
+                        <th>Ish turi</th>
+                        <th>Sana</th>
+                        <th>Holat</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for work in recent_works %}
+                    <tr>
+                        <td>{{ work.title }}</td>
+                        <td>{{ work.work_type.name }}</td>
+                        <td>{{ work.date }}</td>
+                        <td>
+                            {% if work.status == 'approved' %}
+                            <span class="badge badge-success">&#9989; Tasdiqlangan</span>
+                            {% elif work.status == 'pending' %}
+                            <span class="badge badge-warning">&#9203; Kutilmoqda</span>
+                            {% else %}
+                            <span class="badge badge-danger">&#10060; Rad etilgan</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Katta o'qituvchi uchun so'nggi faoliyatlar -->
+{% if user.is_katta and recent_activities %}
+<div class="card">
+    <div class="card-header">
+        <h2>So'nggi faoliyatlar</h2>
+        <a href="{% url 'activity_log' %}" class="btn btn-outline btn-sm">Barchasini ko'rish</a>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Foydalanuvchi</th>
+                        <th>Harakat</th>
+                        <th>Tafsilot</th>
+                        <th>Vaqt</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in recent_activities %}
+                    <tr>
+                        <td>
+                            <span class="activity-user-name">{{ log.user.get_full_name|default:log.user.username }}</span>
+                        </td>
+                        <td>
+                            <span class="activity-badge
+                                {% if log.action == 'work_approved' %}ab-success
+                                {% elif log.action == 'work_rejected' %}ab-danger
+                                {% elif log.action == 'work_added' %}ab-primary
+                                {% elif log.action == 'work_edited' %}ab-warning
+                                {% elif log.action == 'work_deleted' %}ab-danger
+                                {% elif log.action == 'login' %}ab-info
+                                {% else %}ab-default{% endif %}">
+                                {{ log.get_action_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if log.details %}
+                            <span class="activity-detail-text">{{ log.details|truncatewords:10 }}</span>
+                            {% else %}
+                            <span style="color: var(--text-secondary);">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="activity-time-text">{{ log.created_at|timesince }} oldin</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if notifications %}
+<div class="card">
+    <div class="card-header">
+        <h2>Yangi bildirishnomalar</h2>
+        <a href="{% url 'notifications' %}" class="btn btn-outline btn-sm">Barchasini ko'rish</a>
+    </div>
+    <div class="card-body">
+        {% for notif in notifications %}
+        <div class="alert {% if notif.notif_type == 'approved' %}alert-success{% elif notif.notif_type == 'rejected' %}alert-error{% else %}alert-info{% endif %}">
+            {% if notif.notif_type == 'approved' %}&#9989;{% elif notif.notif_type == 'rejected' %}&#10060;{% elif notif.notif_type == 'deadline' %}&#9200;{% else %}&#128276;{% endif %}
+            {{ notif.message }}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

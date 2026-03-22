@@ -1,0 +1,45 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ro'yxatdan o'tish - Ilmiy Reyting Tizimi</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="auth-page">
+        <div class="auth-card">
+            <h1>Ro'yxatdan o'tish</h1>
+            <p>Yangi hisob yarating</p>
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-error">
+                {% for error in form.non_field_errors %}
+                <div>{{ error }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                {% for field in form %}
+                <div class="form-group">
+                    <label>{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                    <small style="color: #dc2626;">{{ field.errors.0 }}</small>
+                    {% elif field.help_text %}
+                    <small style="color: #64748b;">{{ field.help_text }}</small>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                <button type="submit" class="btn btn-primary">Ro'yxatdan o'tish</button>
+            </form>
+            <div class="auth-link">
+                Akkauntingiz bormi? <a href="{% url 'login' %}">Kirish</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

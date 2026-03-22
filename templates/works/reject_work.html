@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Ishni rad etish{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h1>Ilmiy ishni rad etish</h1>
+    <a href="{% url 'all_works' %}" class="btn btn-outline">Orqaga</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div style="margin-bottom: 20px; padding: 16px; background: #f8fafc; border-radius: 8px;">
+            <p><strong>Ish nomi:</strong> {{ work.title }}</p>
+            <p><strong>O'qituvchi:</strong> {{ work.teacher.user.get_full_name }}</p>
+            <p><strong>Ish turi:</strong> {{ work.work_type.name }}</p>
+            <p><strong>Sana:</strong> {{ work.date }}</p>
+        </div>
+
+        <form method="post" style="max-width: 600px;">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>{{ form.reject_reason.label }}</label>
+                {{ form.reject_reason }}
+            </div>
+            <button type="submit" class="btn btn-danger">Rad etish</button>
+            <a href="{% url 'all_works' %}" class="btn btn-outline">Bekor qilish</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

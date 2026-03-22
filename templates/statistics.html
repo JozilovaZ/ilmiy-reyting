@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+
+{% block title %}Statistika{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h1>Statistika - {{ current_year }}</h1>
+    <div class="top-bar-actions">
+        <a href="{% url 'export_excel' %}" class="btn btn-success">Excel yuklash</a>
+        <a href="{% url 'export_pdf' %}" class="btn btn-outline">PDF</a>
+    </div>
+</div>
+
+<div class="stats-grid">
+    {% for s in stats %}
+    <div class="stat-card">
+        <h3>{{ s.name }}</h3>
+        <div class="number">{{ s.count }}</div>
+        <small style="color: var(--text-secondary);">Har biri {{ s.score }} ball</small>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Oylik grafik -->
+<div class="card">
+    <div class="card-header">
+        <h2>Oylik statistika ({{ current_year }})</h2>
+    </div>
+    <div class="card-body">
+        <div class="chart-container">
+            <canvas id="monthlyChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Kafedra statistikasi -->
+{% if kafedra_stats %}
+<div class="kafedra-charts-grid">
+    <div class="card">
+        <div class="card-header">
+            <h2>Kafedra bo'yicha ball</h2>
+        </div>
+        <div class="card-body">
+            <div class="chart-container">
+                <canvas id="kafedraScoreChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">
+            <h2>Kafedra bo'yicha ishlar</h2>
+        </div>
+        <div class="card-body">
+            <div class="chart-container">
+                <canvas id="kafedraWorksChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2>Kafedra statistikasi</h2>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Kafedra</th>
+                        <th>O'qituvchilar</th>
+                        <th>Ilmiy ishlar</th>
+                        <th>Umumiy ball</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for k in kafedra_stats %}
+                    <tr>
+                        <td><strong>{{ k.name }}</strong></td>
+                        <td>{{ k.teachers }}</td>
+                        <td>{{ k.works }}</td>
+                        <td><span class="work-score-val">{{ k.score }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Top 10 -->
+<div class="card">
+    <div class="card-header">
+        <h2>Top 10 o'qituvchilar</h2>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>O'rin</th>
+                        <th>O'qituvchi</th>
+                        <th>Kafedra</th>
+                        <th>Ball</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in top_teachers %}
+                    <tr>
+                        <td>
+                            <span class="{% if forloop.counter == 1 %}rank-1{% elif forloop.counter == 2 %}rank-2{% elif forloop.counter == 3 %}rank-3{% endif %}">
+                                {% if forloop.counter == 1 %}&#129351;{% elif forloop.counter == 2 %}&#129352;{% elif forloop.counter == 3 %}&#129353;{% else %}{{ forloop.counter }}{% endif %}
+                            </span>
+                        </td>
+                        <td>{{ t.user.get_full_name|default:t.user.username }}</td>
+                        <td>{{ t.kafedra|default:"-" }}</td>
+                        <td><strong>{{ t.score|default:"0" }}</strong></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const months = ['Yan', 'Fev', 'Mar', 'Apr', 'May', 'Iyn', 'Iyl', 'Avg', 'Sen', 'Okt', 'Noy', 'Dek'];
+const data = [{% for m in monthly_stats %}{{ m.count }}{% if not forloop.last %},{% endif %}{% endfor %}];
+
+new Chart(document.getElementById('monthlyChart'), {
+    type: 'bar',
+    data: {
+        labels: months,
+        datasets: [{
+            label: 'Ilmiy ishlar soni',
+            data: data,
+            backgroundColor: 'rgba(100, 69, 236, 0.7)',
+            borderRadius: 6,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+    }
+});
+
+// Kafedra diagrammalari
+{% if kafedra_stats %}
+const kafedraLabels = [{% for k in kafedra_stats %}'{{ k.name }}'{% if not forloop.last %},{% endif %}{% endfor %}];
+const kafedraScores = [{% for k in kafedra_stats %}{{ k.score }}{% if not forloop.last %},{% endif %}{% endfor %}];
+const kafedraWorks = [{% for k in kafedra_stats %}{{ k.works }}{% if not forloop.last %},{% endif %}{% endfor %}];
+const kafedraTeachers = [{% for k in kafedra_stats %}{{ k.teachers }}{% if not forloop.last %},{% endif %}{% endfor %}];
+
+const kafedraColors = [
+    'rgba(100, 69, 236, 0.8)',
+    'rgba(139, 108, 246, 0.8)',
+    'rgba(59, 130, 246, 0.8)',
+    'rgba(16, 185, 129, 0.8)',
+    'rgba(245, 158, 11, 0.8)',
+    'rgba(239, 68, 68, 0.8)',
+    'rgba(6, 182, 212, 0.8)',
+    'rgba(168, 85, 247, 0.8)',
+    'rgba(34, 197, 94, 0.8)',
+    'rgba(251, 146, 60, 0.8)',
+];
+
+// Ball diagrammasi - donut
+new Chart(document.getElementById('kafedraScoreChart'), {
+    type: 'doughnut',
+    data: {
+        labels: kafedraLabels,
+        datasets: [{
+            data: kafedraScores,
+            backgroundColor: kafedraColors.slice(0, kafedraLabels.length),
+            borderWidth: 2,
+            borderColor: getComputedStyle(document.documentElement).getPropertyValue('--card-bg').trim() || '#fff',
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '55%',
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    padding: 16,
+                    usePointStyle: true,
+                    pointStyle: 'circle',
+                    font: { size: 12 }
+                }
+            }
+        }
+    }
+});
+
+// Ishlar diagrammasi - gorizontal bar
+new Chart(document.getElementById('kafedraWorksChart'), {
+    type: 'bar',
+    data: {
+        labels: kafedraLabels,
+        datasets: [
+            {
+                label: 'Ilmiy ishlar',
+                data: kafedraWorks,
+                backgroundColor: 'rgba(100, 69, 236, 0.7)',
+                borderRadius: 6,
+            },
+            {
+                label: "O'qituvchilar",
+                data: kafedraTeachers,
+                backgroundColor: 'rgba(139, 108, 246, 0.4)',
+                borderRadius: 6,
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    padding: 16,
+                    usePointStyle: true,
+                    pointStyle: 'circle',
+                    font: { size: 12 }
+                }
+            }
+        },
+        scales: {
+            x: { beginAtZero: true, ticks: { stepSize: 1 } }
+        }
+    }
+});
+{% endif %}
+</script>
+{% endblock %}

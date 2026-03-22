@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}Bildirishnomalar{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h1>Bildirishnomalar</h1>
+    {% if notifications %}
+    <div class="top-bar-actions">
+        <a href="{% url 'mark_all_read' %}" class="btn btn-outline">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            Barchasini o'qildi
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div class="card-body" style="padding: 0;">
+        {% for notif in notifications %}
+        <div class="notif-item {% if not notif.is_read %}notif-unread{% endif %}">
+            <div class="notif-icon notif-icon-{{ notif.notif_type }}">
+                {% if notif.notif_type == 'approved' %}
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                {% elif notif.notif_type == 'rejected' %}
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                {% elif notif.notif_type == 'deadline' %}
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                {% elif notif.notif_type == 'rating' %}
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                {% else %}
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                {% endif %}
+            </div>
+            <div class="notif-content">
+                <p class="notif-message">{{ notif.message }}</p>
+                <span class="notif-time">{{ notif.created_at|date:"d.m.Y H:i" }}</span>
+            </div>
+            {% if not notif.is_read %}
+            <a href="{% url 'mark_read' notif.pk %}" class="notif-mark-btn" title="O'qildi deb belgilash">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            </a>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div style="text-align: center; padding: 60px 20px; color: var(--text-secondary);">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="48" height="48" style="margin-bottom: 12px; opacity: 0.4;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+            <p style="font-size: 15px;">Bildirishnomalar yo'q</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

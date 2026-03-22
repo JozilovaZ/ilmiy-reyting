@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Muddatlar{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h1>&#128197; Muddatlar</h1>
+</div>
+
+{% if user.is_katta %}
+<!-- Yangi muddat qo'shish -->
+<div class="card">
+    <div class="card-header">
+        <h2>Yangi muddat belgilash</h2>
+    </div>
+    <div class="card-body">
+        <form method="post" style="max-width: 600px;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add">
+            {% for field in add_form %}
+            <div class="form-group">
+                <label>{{ field.label }}</label>
+                {{ field }}
+            </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary">Muddat belgilash</button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<!-- Muddatlar ro'yxati -->
+<div class="card">
+    <div class="card-header">
+        <h2>Barcha muddatlar</h2>
+    </div>
+    <div class="card-body">
+        {% for d in deadlines %}
+        <div class="deadline-item {% if d.is_overdue %}overdue{% elif d.days_left <= 3 %}warning{% endif %}">
+            <div class="deadline-info">
+                <div class="deadline-title">
+                    {% if d.is_overdue %}&#128308;{% elif d.days_left <= 3 %}&#128992;{% elif d.is_active %}&#128994;{% else %}&#9898;{% endif %}
+                    {{ d.title }}
+                    {% if not d.is_active %}<span class="badge badge-default">Yakunlangan</span>{% endif %}
+                </div>
+                {% if d.description %}<div class="deadline-desc">{{ d.description }}</div>{% endif %}
+                <div class="deadline-date">
+                    Muddat: <strong>{{ d.due_date|date:"d.m.Y" }}</strong>
+                    {% if d.is_active %}
+                        {% if d.is_overdue %}
+                        - <span style="color: var(--danger);">{{ d.days_left|cut:"-" }} kun o'tgan!</span>
+                        {% elif d.days_left == 0 %}
+                        - <span style="color: var(--warning);">Bugun oxirgi kun!</span>
+                        {% else %}
+                        - {{ d.days_left }} kun qoldi
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            {% if user.is_katta %}
+            <div class="deadline-actions">
+                <form method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="toggle">
+                    <input type="hidden" name="dl_id" value="{{ d.pk }}">
+                    <button type="submit" class="btn btn-outline btn-sm">
+                        {% if d.is_active %}Yakunlash{% else %}Faollashtirish{% endif %}
+                    </button>
+                </form>
+                <form method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="dl_id" value="{{ d.pk }}">
+                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('O\'chirishni xohlaysizmi?')">O'chirish</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+        {% empty %}
+        <p style="text-align: center; color: var(--gray); padding: 40px;">Hozircha muddatlar belgilanmagan</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

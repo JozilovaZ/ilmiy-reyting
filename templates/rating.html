@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+
+{% block title %}Reyting jadvali{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h1>Reyting jadvali</h1>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="get" class="filter-bar">
+            <select name="kafedra" class="form-control">
+                <option value="">Barcha kafedralar</option>
+                {% for k in kafedralar %}
+                <option value="{{ k.id }}" {% if request.GET.kafedra == k.id|stringformat:"d" %}selected{% endif %}>{{ k.name }}</option>
+                {% endfor %}
+            </select>
+            <select name="year" class="form-control">
+                <option value="">Barcha yillar</option>
+                <option value="2024" {% if request.GET.year == '2024' %}selected{% endif %}>2024</option>
+                <option value="2025" {% if request.GET.year == '2025' %}selected{% endif %}>2025</option>
+                <option value="2026" {% if request.GET.year == '2026' %}selected{% endif %}>2026</option>
+            </select>
+            <button type="submit" class="btn btn-outline">Filtrlash</button>
+        </form>
+
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">O'rin</th>
+                        <th>O'qituvchi</th>
+                        <th>Kafedra</th>
+                        <th>Lavozimi</th>
+                        <th>Ilmiy darajasi</th>
+                        <th>Ball</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in teachers %}
+                    <tr>
+                        <td>
+                            <span class="{% if forloop.counter == 1 %}rank-1{% elif forloop.counter == 2 %}rank-2{% elif forloop.counter == 3 %}rank-3{% endif %}">
+                                {% if forloop.counter == 1 %}&#127942;{% elif forloop.counter == 2 %}&#129352;{% elif forloop.counter == 3 %}&#129353;{% else %}{{ forloop.counter }}{% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{% url 'teacher_detail' t.pk %}" style="text-decoration:none; color: var(--primary); font-weight: 500;">
+                                {{ t.user.get_full_name|default:t.user.username }}
+                            </a>
+                        </td>
+                        <td>{{ t.kafedra|default:"-" }}</td>
+                        <td>{{ t.position }}</td>
+                        <td>{{ t.get_degree_display }}</td>
+                        <td><strong style="font-size: 18px; color: var(--primary);">{{ t.score|default:"0" }}</strong></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" style="text-align:center; color: var(--gray);">O'qituvchilar topilmadi</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Diagrammalar -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+
+    <!-- Top 10 bar chart -->
+    <div class="card" style="grid-column: 1 / -1;">
+        <div class="card-header">
+            <h2>Top 10 o'qituvchilar reytingi</h2>
+        </div>
+        <div class="card-body">
+            <div class="chart-container" style="position: relative; height: 350px;">
+                <canvas id="topTeachersChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kafedra donut chart -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Kafedra bo'yicha ball taqsimoti</h2>
+        </div>
+        <div class="card-body">
+            <div class="chart-container" style="position: relative; height: 300px;">
+                <canvas id="kafedraChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ish turlari chart -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Ish turlari bo'yicha taqsimot</h2>
+        </div>
+        <div class="card-body">
+            <div class="chart-container" style="position: relative; height: 300px;">
+                <canvas id="workTypesChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const chartColors = [
+    'rgba(37, 99, 235, 0.8)',
+    'rgba(16, 185, 129, 0.8)',
+    'rgba(245, 158, 11, 0.8)',
+    'rgba(239, 68, 68, 0.8)',
+    'rgba(139, 92, 246, 0.8)',
+    'rgba(14, 165, 233, 0.8)',
+    'rgba(236, 72, 153, 0.8)',
+    'rgba(34, 197, 94, 0.8)',
+    'rgba(249, 115, 22, 0.8)',
+    'rgba(99, 102, 241, 0.8)',
+];
+
+const borderColors = chartColors.map(c => c.replace('0.8', '1'));
+
+// Top 10 o'qituvchilar
+const topNames = {{ chart_names|safe }};
+const topScores = {{ chart_scores|safe }};
+
+if (topNames.length > 0) {
+    new Chart(document.getElementById('topTeachersChart'), {
+        type: 'bar',
+        data: {
+            labels: topNames,
+            datasets: [{
+                label: 'Ball',
+                data: topScores,
+                backgroundColor: chartColors.slice(0, topNames.length),
+                borderColor: borderColors.slice(0, topNames.length),
+                borderWidth: 1,
+                borderRadius: 6,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) { return ctx.parsed.y + ' ball'; }
+                    }
+                }
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 5 } },
+                x: { ticks: { maxRotation: 45, minRotation: 0 } }
+            }
+        }
+    });
+}
+
+// Kafedra donut
+const kafedraNames = {{ kafedra_names|safe }};
+const kafedraScores = {{ kafedra_scores|safe }};
+
+if (kafedraNames.length > 0) {
+    new Chart(document.getElementById('kafedraChart'), {
+        type: 'doughnut',
+        data: {
+            labels: kafedraNames,
+            datasets: [{
+                data: kafedraScores,
+                backgroundColor: chartColors.slice(0, kafedraNames.length),
+                borderColor: '#fff',
+                borderWidth: 2,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { padding: 15, usePointStyle: true }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                            const pct = Math.round(ctx.parsed / total * 100);
+                            return ctx.label + ': ' + ctx.parsed + ' ball (' + pct + '%)';
+                        }
+                    }
+                }
+            }
+        }
+    });
+} else {
+    document.getElementById('kafedraChart').parentElement.innerHTML = '<p style="text-align:center; color: var(--gray); padding: 40px;">Ma\'lumot topilmadi</p>';
+}
+
+// Ish turlari - horizontal bar
+const wtNames = {{ wt_names|safe }};
+const wtCounts = {{ wt_counts|safe }};
+
+if (wtNames.length > 0) {
+    new Chart(document.getElementById('workTypesChart'), {
+        type: 'bar',
+        data: {
+            labels: wtNames,
+            datasets: [{
+                label: 'Ishlar soni',
+                data: wtCounts,
+                backgroundColor: chartColors.slice(0, wtNames.length),
+                borderColor: borderColors.slice(0, wtNames.length),
+                borderWidth: 1,
+                borderRadius: 6,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) { return ctx.parsed.x + ' ta ish'; }
+                    }
+                }
+            },
+            scales: {
+                x: { beginAtZero: true, ticks: { stepSize: 1 } }
+            }
+        }
+    });
+} else {
+    document.getElementById('workTypesChart').parentElement.innerHTML = '<p style="text-align:center; color: var(--gray); padding: 40px;">Ma\'lumot topilmadi</p>';
+}
+</script>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ teacher.user.get_full_name }}{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h1>{{ teacher.user.get_full_name|default:teacher.user.username }}</h1>
+    <a href="{% url 'rating' %}" class="btn btn-outline">Reytingga qaytish</a>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>Umumiy ball</h3>
+        <div class="score-big">{{ total_score }}</div>
+    </div>
+    <div class="stat-card green">
+        <h3>Ilmiy ishlar soni</h3>
+        <div class="number">{{ works.count }}</div>
+    </div>
+    <div class="stat-card orange">
+        <h3>Lavozimi</h3>
+        <div style="font-size: 18px; font-weight: 600;">{{ teacher.position }}</div>
+    </div>
+    <div class="stat-card cyan">
+        <h3>Ilmiy darajasi</h3>
+        <div style="font-size: 18px; font-weight: 600;">{{ teacher.get_degree_display }}</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2>Ma'lumotlar</h2>
+    </div>
+    <div class="card-body">
+        <p><strong>Kafedra:</strong> {{ teacher.kafedra|default:"-" }}</p>
+        <p><strong>Ish staji:</strong> {{ teacher.experience_years }} yil</p>
+        <p><strong>Email:</strong> {{ teacher.user.email|default:"-" }}</p>
+        <p><strong>Telefon:</strong> {{ teacher.user.phone|default:"-" }}</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2>Tasdiqlangan ilmiy ishlar</h2>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Nomi</th>
+                        <th>Ish turi</th>
+                        <th>Ball</th>
+                        <th>Sana</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for work in works %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ work.title }}</td>
+                        <td>{{ work.work_type.name }}</td>
+                        <td><strong>{{ work.work_type.score }}</strong></td>
+                        <td>{{ work.date }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" style="text-align:center; color: var(--gray);">Ilmiy ishlar topilmadi</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

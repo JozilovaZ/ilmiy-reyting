@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}PDF Hisobot{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h1>Reyting hisoboti</h1>
+    <button onclick="window.print()" class="btn btn-primary">Chop etish / PDF saqlash</button>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <h2 style="text-align: center; margin-bottom: 20px;">Kafedra o'qituvchilari ilmiy-uslubiy ishlari reytingi</h2>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>O'qituvchi</th>
+                        <th>Kafedra</th>
+                        <th>Lavozimi</th>
+                        <th>Ilmiy darajasi</th>
+                        <th>Umumiy ball</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in teachers %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ t.user.get_full_name|default:t.user.username }}</td>
+                        <td>{{ t.kafedra|default:"-" }}</td>
+                        <td>{{ t.position }}</td>
+                        <td>{{ t.get_degree_display }}</td>
+                        <td><strong>{{ t.score|default:"0" }}</strong></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}Faoliyat tarixi{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h1>&#128203; Faoliyat tarixi</h1>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="get" class="filter-bar">
+            <select name="user" class="form-control">
+                <option value="">Barcha foydalanuvchilar</option>
+                {% for u in users %}
+                <option value="{{ u.id }}" {% if request.GET.user == u.id|stringformat:"d" %}selected{% endif %}>{{ u.get_full_name|default:u.username }}</option>
+                {% endfor %}
+            </select>
+            <select name="action" class="form-control">
+                <option value="">Barcha amallar</option>
+                <option value="work_added" {% if request.GET.action == 'work_added' %}selected{% endif %}>Ish qo'shildi</option>
+                <option value="work_approved" {% if request.GET.action == 'work_approved' %}selected{% endif %}>Ish tasdiqlandi</option>
+                <option value="work_rejected" {% if request.GET.action == 'work_rejected' %}selected{% endif %}>Ish rad etildi</option>
+                <option value="work_edited" {% if request.GET.action == 'work_edited' %}selected{% endif %}>Ish tahrirlandi</option>
+                <option value="work_deleted" {% if request.GET.action == 'work_deleted' %}selected{% endif %}>Ish o'chirildi</option>
+                <option value="score_changed" {% if request.GET.action == 'score_changed' %}selected{% endif %}>Ball o'zgartirildi</option>
+                <option value="profile_updated" {% if request.GET.action == 'profile_updated' %}selected{% endif %}>Profil yangilandi</option>
+            </select>
+            <button type="submit" class="btn btn-outline">Filtrlash</button>
+        </form>
+
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Vaqt</th>
+                        <th>Foydalanuvchi</th>
+                        <th>Amal</th>
+                        <th>Tafsilotlar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td>{{ log.created_at|date:"d.m.Y H:i" }}</td>
+                        <td>{{ log.user.get_full_name|default:log.user.username }}</td>
+                        <td>
+                            {% if log.action == 'work_approved' %}
+                            <span class="badge badge-success">{{ log.get_action_display }}</span>
+                            {% elif log.action == 'work_rejected' %}
+                            <span class="badge badge-danger">{{ log.get_action_display }}</span>
+                            {% elif log.action == 'work_added' %}
+                            <span class="badge badge-info">{{ log.get_action_display }}</span>
+                            {% elif log.action == 'score_changed' %}
+                            <span class="badge badge-warning">{{ log.get_action_display }}</span>
+                            {% else %}
+                            <span class="badge badge-default">{{ log.get_action_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ log.details|truncatewords:15 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" style="text-align:center; color: var(--gray);">Faoliyat tarixi bo'sh</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

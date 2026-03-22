@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Mening ishlarim{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h1>Mening ilmiy ishlarim</h1>
+    <a href="{% url 'add_work' %}" class="btn btn-primary">+ Yangi ish qo'shish</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="get" class="filter-bar">
+            <input type="text" name="search" class="form-control" placeholder="Qidirish..." value="{{ request.GET.search }}">
+            <select name="type" class="form-control">
+                <option value="">Barcha turlar</option>
+                {% for wt in work_types %}
+                <option value="{{ wt.id }}" {% if request.GET.type == wt.id|stringformat:"d" %}selected{% endif %}>{{ wt.name }}</option>
+                {% endfor %}
+            </select>
+            <select name="year" class="form-control">
+                <option value="">Barcha yillar</option>
+                {% for y in years %}
+                <option value="{{ y.year }}" {% if request.GET.year == y.year|stringformat:"d" %}selected{% endif %}>{{ y.year }}</option>
+                {% endfor %}
+            </select>
+            <select name="status" class="form-control">
+                <option value="">Barcha holatlar</option>
+                <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Kutilmoqda</option>
+                <option value="approved" {% if request.GET.status == 'approved' %}selected{% endif %}>Tasdiqlangan</option>
+                <option value="rejected" {% if request.GET.status == 'rejected' %}selected{% endif %}>Rad etilgan</option>
+            </select>
+            <button type="submit" class="btn btn-outline">Filtrlash</button>
+        </form>
+
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Nomi</th>
+                        <th>Ish turi</th>
+                        <th>Ball</th>
+                        <th>Sana</th>
+                        <th>Holat</th>
+                        <th>Amallar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for work in works %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>
+                            {{ work.title }}
+                            {% if work.status == 'rejected' and work.reject_reason %}
+                            <br><small style="color: var(--danger);">Sabab: {{ work.reject_reason }}</small>
+                            {% endif %}
+                        </td>
+                        <td>{{ work.work_type.name }}</td>
+                        <td><strong>{{ work.work_type.score }}</strong></td>
+                        <td>{{ work.date }}</td>
+                        <td>
+                            {% if work.status == 'approved' %}
+                            <span class="badge badge-success">&#9989; Tasdiqlangan</span>
+                            {% elif work.status == 'pending' %}
+                            <span class="badge badge-warning">&#9203; Kutilmoqda</span>
+                            {% else %}
+                            <span class="badge badge-danger">&#10060; Rad etilgan</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if work.status != 'approved' %}
+                            <a href="{% url 'edit_work' work.pk %}" class="btn btn-outline btn-sm">Tahrirlash</a>
+                            <form method="post" action="{% url 'delete_work' work.pk %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Ishonchingiz komilmi?')">O'chirish</button>
+                            </form>
+                            {% endif %}
+                            {% if work.file %}
+                            <a href="{{ work.file.url }}" class="btn btn-outline btn-sm" target="_blank">&#128196; Fayl</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" style="text-align:center; color: var(--gray);">Hali ilmiy ish qo'shilmagan</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if teacher %}
+        <div style="margin-top: 20px; text-align: right;">
+            <strong>Umumiy ball (tasdiqlangan): <span style="color: var(--primary); font-size: 20px;">{{ teacher.total_score }}</span></strong>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

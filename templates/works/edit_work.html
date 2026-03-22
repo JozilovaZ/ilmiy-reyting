@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Ilmiy ishni tahrirlash{% endblock %}
+
+{% block content %}
+<div class="top-bar">
+    <h1>Ilmiy ishni tahrirlash</h1>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if form.non_field_errors %}
+        <div class="alert alert-error">
+            {% for error in form.non_field_errors %}
+            <p>{{ error }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <form method="post" enctype="multipart/form-data" style="max-width: 600px;">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="form-group">
+                <label>{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+                {{ field }}
+                {% if field.errors %}
+                <small style="color: var(--danger);">{{ field.errors.0 }}</small>
+                {% endif %}
+            </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary">Saqlash</button>
+            <a href="{% url 'my_works' %}" class="btn btn-outline">Bekor qilish</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
